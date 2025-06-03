@@ -49,6 +49,23 @@ return function(config)
 
     return script_args
   end
+  ---@param root string
+  ---@return string[]
+  local function get_python_command(root)
+    local python_path = config.get_python_command(root)
+    vim.notify_once(
+      string.format("Using python path: %s", table.concat(python_path, ", ")),
+      vim.log.levels.DEBUG
+    )
+    return python_path
+  end
+  ---@param python_path string[]
+  ---@return string
+  local function get_runner(python_path)
+    local runner = config.get_runner(python_path)
+    vim.notify_once(string.format("Using python runner: %s", runner), vim.log.levels.DEBUG)
+    return runner
+  end
 
   ---@type neotest.Adapter
   return {
@@ -62,8 +79,8 @@ return function(config)
     discover_positions = function(path)
       local root = base.get_root(path) or vim.loop.cwd() or ""
 
-      local python_command = config.get_python_command(root)
-      local runner = config.get_runner(python_command)
+      local python_command = get_python_command(root)
+      local runner = get_runner(python_command)
 
       local positions = lib.treesitter.parse_positions(path, base.treesitter_queries(runner, config, python_command), {
         require_namespaces = runner == "unittest",
@@ -82,8 +99,8 @@ return function(config)
 
       local root = base.get_root(position.path) or vim.loop.cwd() or ""
 
-      local python_command = config.get_python_command(root)
-      local runner = config.get_runner(python_command)
+      local python_command = get_python_command(root)
+      local runner = get_runner(python_command)
 
       local results_path = nio.fn.tempname()
       local stream_path = nio.fn.tempname()
